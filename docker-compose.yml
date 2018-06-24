@@ -1,0 +1,44 @@
+version: '2'
+
+services:
+  skeleton-app:
+    container_name: skeleton-app
+    image: busybox
+    volumes:
+      - ./app:/app
+
+  skeleton-nginx:
+    container_name: skeleton
+    build: builds/nginx
+    volumes_from:
+      - skeleton-app
+    links:
+      - skeleton-php:php
+    volumes:
+      - ./data/logs/nginx:/var/log/nginx
+
+  skeleton-php:
+    container_name: skeleton-php
+    build: builds/php-fpm
+    volumes_from:
+      - skeleton-app
+    volumes:
+        - /var/composer-cache:/root/.composer/cache
+    links:
+      - skeleton-mysql:mysql
+      - skeleton-smtp:smtp
+    environment:
+      - PHP_IDE_CONFIG=serverName=localhost
+
+  skeleton-mysql:
+    container_name: skeleton-mysql
+    image: mysql:5.6
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db
+
+  skeleton-smtp:
+    container_name: skeleton-smtp
+    image: djfarrelly/maildev
